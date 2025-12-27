@@ -69,13 +69,10 @@ This drastically **saves storage space** by eliminating duplicates.
 │   │   ├── files.js
 │   │   └── upload.js
 │   └── storage
-│       └── b1260bbcd0de4e63774c5b4d048b265573894f0b6fd6cca74223c7da2151d6d3
+│  
 ├── structure.txt
 └── temp
-    ├── 34a8eceaef654ddc0a38434c0edabf7a
-    ├── 50d3314f9734245954243b66d8aa8e12
-    ├── 74eacd73c6e92378152817ecca6ca873
-    └── 96b34155b033102f2d5fe3cceca94db3
+
 ```
 ---
 
