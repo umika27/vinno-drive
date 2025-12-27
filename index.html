@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Vinnodrive</title>
+
+  <style>
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: Arial, Helvetica, sans-serif;
+    background: linear-gradient(135deg, #e3f2fd, #e1f5fe);
+    margin: 0;
+    padding: 0;
+  }
+
+  .container {
+    max-width: 900px;
+    margin: 40px auto;
+    background: white;
+    padding: 25px 30px;
+    border-radius: 18px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+  }
+
+  h1 {
+    text-align: center;
+    color: #2b2b2b;
+    margin-top: 0;
+  }
+
+  .upload-box {
+    border: 2px dashed #90caf9;
+    background: #f6fbff;
+    padding: 25px;
+    border-radius: 14px;
+    text-align: center;
+    margin-bottom: 25px;
+  }
+
+  input[type="file"] {
+    margin: 10px 0;
+  }
+
+  .btn {
+    border: none;
+    padding: 8px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-left: 4px;
+  }
+
+  .btn-primary { background: #42a5f5; color: white; }
+  .btn-danger { background: #ef5350; color: white; }
+  .btn-success { background: #66bb6a; color: white; }
+
+  .btn:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+
+  .file-card {
+    border: 1px solid #e3e3e3;
+    padding: 12px 15px;
+    border-radius: 12px;
+    margin-top: 10px;
+    background: #fafafa;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: 0.2s;
+  }
+
+  .file-card:hover {
+    box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+    background: white;
+  }
+
+  .filename {
+    font-weight: bold;
+    color: #333;
+  }
+
+  #uploadStatus {
+    text-align: center;
+    font-weight: bold;
+    color: #2e7d32;
+  }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <h1>Vinnodrive </h1>
+
+    <div class="upload-box">
+      <h3>Upload a file</h3>
+
+      <input type="file" id="fileInput">
+      <br>
+      <button class="btn btn-primary" onclick="uploadFile()">Upload</button>
+
+      <p id="uploadStatus"></p>
+    </div>
+
+    <h3>Your files</h3>
+
+    <div id="fileList"></div>
+
+  </div>
+
+<script>
+const API = "http://localhost:8081";
+
+// ---------- Upload ----------
+async function uploadFile() {
+  const fileInput = document.getElementById("fileInput");
+  const status = document.getElementById("uploadStatus");
+
+  if (!fileInput.files.length) {
+    status.innerText = "Please select a file";
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("file", fileInput.files[0]);
+
+  status.innerText = "Uploading...";
+
+  const res = await fetch(API + "/upload", {
+    method: "POST",
+    body: formData
+  });
+
+  const data = await res.json();
+
+  status.innerText = data.message;
+
+  loadFiles();
+}
+
+// ---------- Load file list ----------
+async function loadFiles() {
+  const res = await fetch(API + "/files");
+  const files = await res.json();
+
+  const listDiv = document.getElementById("fileList");
+  listDiv.innerHTML = "";
+
+  files.forEach(file => {
+    const div = document.createElement("div");
+    div.className = "file-card";
+
+    div.innerHTML = `
+      <div>
+        <div class="filename">${file.filename}</div>
+        <div style="font-size: 13px; color: grey;">
+          ${file.size} bytes • references: ${file.referenceCount}
+        </div>
+      </div>
+
+      <div>
+        <button class="btn btn-success" onclick="downloadFile('${file._id}')">Download</button>
+        <button class="btn btn-primary" onclick="shareFile('${file._id}')">Share</button>
+        <button class="btn btn-danger" onclick="deleteFile('${file._id}')">Delete</button>
+      </div>
+    `;
+
+    listDiv.appendChild(div);
+  });
+}
+
+// ---------- Download ----------
+async function downloadFile(id) {
+  window.location = API + "/files/download/" + id;
+}
+
+// ---------- Share ----------
+async function shareFile(id) {
+  const res = await fetch(API + "/files/share/" + id, {
+    method: "POST"
+  });
+
+  const data = await res.json();
+
+  navigator.clipboard.writeText(data.url);
+
+  alert("Public link copied:\n" + data.url);
+}
+
+// ---------- Delete ----------
+async function deleteFile(id) {
+  await fetch(API + "/files/" + id, {
+    method: "DELETE"
+  });
+
+  loadFiles();
+}
+
+// load files on page open
+loadFiles();
+</script>
+
+</body>
+</html>
